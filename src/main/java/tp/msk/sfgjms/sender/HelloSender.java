@@ -35,26 +35,27 @@ public class HelloSender {
     }
 
     @Scheduled(fixedRate = 2000)
-    public void sendAndReceiveMessage(){
+    public void sendAndReceiveMessage() throws JMSException {
 
         HelloWorldMessage message = HelloWorldMessage.builder()
                 .id(UUID.randomUUID())
-                .message("Hello World!")
+                .message("Hello")
                 .build();
 
-        jmsTemplate.sendAndReceive(JmsConfig.MY_SEND_MY_QUEUE, new MessageCreator() {
+        Message receivedMsg = jmsTemplate.sendAndReceive(JmsConfig.MY_SEND_MY_QUEUE, new MessageCreator() {
             @Override
             public Message createMessage(Session session) throws JMSException {
                 Message helloMessage = null;
                 try {
                     helloMessage = session.createTextMessage(objectMapper.writeValueAsString(message));
                     helloMessage.setStringProperty("_type", "tp.msk.sfgjms.model.HelloWorldMessage");
+                    System.out.println("Sending Hello");
                     return helloMessage;
                 } catch (JsonProcessingException e) {
                     throw new JMSException("Boom");
                 }
             }
         });
-
+        System.out.println(receivedMsg.getBody(String.class));
     }
 }
